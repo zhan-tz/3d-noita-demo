@@ -11,6 +11,7 @@ use game::{GamePlugin, GameState};
 use physics::collision::CollisionPlugin;
 use player::controller::PlayerPlugin;
 use player::InteractionPlugin;
+use rendering::debug::DebugPlugin;
 use world::chunk_manager::ChunkManagerPlugin;
 
 fn main() {
@@ -22,5 +23,6 @@ fn main() {
         .add_plugins(ChunkManagerPlugin)
         .add_plugins(CollisionPlugin)
         .add_plugins(InteractionPlugin)
+        .add_plugins(DebugPlugin)
         .run();
 }
