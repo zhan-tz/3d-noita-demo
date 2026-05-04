@@ -2,7 +2,7 @@ use bevy::prelude::{IVec3, Vec3};
 
 use crate::physics::explosion::ExplosionResult;
 use crate::physics::material::MaterialProperties;
-use crate::world::chunk::{Block, ChunkMap, Material, CHUNK_SIZE};
+use crate::world::chunk::{Block, ChunkMap, Material};
 /// Single-sourced spell system with 8 spell types.
 /// This module provides pure functions for spell behavior suitable for testing.
 

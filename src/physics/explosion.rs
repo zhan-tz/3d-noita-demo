@@ -96,7 +96,7 @@ pub fn create_explosion(
                         };
                         affected_chunks.insert(chunk_pos);
                         // If there is a sand block above the destroyed cell, mark its chunk dirty as well
-                        if y + 1 <= i32::MAX {
+                        if y < i32::MAX {
                             if chunk_map.get_block(IVec3 { x, y: y + 1, z }) == Material::Sand {
                                 if let Some(ch2) = chunk_map.get_chunk_mut(IVec3 { x, y: y + 1, z })
                                 {

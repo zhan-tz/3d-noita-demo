@@ -2,6 +2,9 @@ use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 use bevy::window::CursorGrabMode;
 
+use crate::physics::collision::is_ground_beneath;
+use crate::world::chunk_manager::ChunkWorldState;
+
 #[derive(Component)]
 pub struct Player;
 
@@ -44,7 +47,6 @@ pub struct PlayerSettings {
     pub gravity: f32,
     pub jump_speed: f32,
     pub is_flying: bool,
-    pub is_grounded: bool,
 }
 
 impl Default for PlayerSettings {
@@ -53,7 +55,6 @@ impl Default for PlayerSettings {
             gravity: -20.0,
             jump_speed: 8.0,
             is_flying: true,
-            is_grounded: false,
         }
     }
 }
@@ -79,7 +80,7 @@ impl Plugin for PlayerPlugin {
                 (
                     player_movement,
                     player_look,
-                    player_gravity,
+                    player_fly_movement,
                     player_jump,
                     toggle_fly_mode,
                     mouse_lock_system,
@@ -209,44 +210,31 @@ fn player_look(
     transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, new_pitch, 0.0);
 }
 
-fn player_gravity(
+fn player_fly_movement(
     time: Res<Time>,
     settings: Res<PlayerSettings>,
-    mut velocity: Query<&mut Velocity, With<Player>>,
+    velocity: Query<&Velocity, With<Player>>,
     mut transform: Query<&mut Transform, With<PlayerCamera>>,
 ) {
-    if settings.is_flying {
-        let Ok(mut vel) = velocity.get_single_mut() else {
-            return;
-        };
-        let Ok(mut tf) = transform.get_single_mut() else {
-            return;
-        };
-        tf.translation += vel.value * time.delta_secs();
+    if !settings.is_flying {
         return;
     }
 
-    let Ok(mut vel) = velocity.get_single_mut() else {
+    let Ok(vel) = velocity.get_single() else {
         return;
     };
     let Ok(mut tf) = transform.get_single_mut() else {
         return;
     };
-
-    vel.value.y += settings.gravity * time.delta_secs();
-
     tf.translation += vel.value * time.delta_secs();
-
-    if tf.translation.y <= 1.8 {
-        tf.translation.y = 1.8;
-        vel.value.y = 0.0;
-    }
 }
 
 fn player_jump(
     keyboard: Res<ButtonInput<KeyCode>>,
     settings: Res<PlayerSettings>,
+    world_state: Res<ChunkWorldState>,
     mut velocity: Query<&mut Velocity, With<Player>>,
+    transform: Query<&Transform, With<PlayerCamera>>,
 ) {
     if settings.is_flying {
         return;
@@ -254,14 +242,17 @@ fn player_jump(
     if !keyboard.just_pressed(KeyCode::Space) {
         return;
     }
-    if !settings.is_grounded {
-        return;
-    }
 
     let Ok(mut vel) = velocity.get_single_mut() else {
         return;
     };
-    vel.value.y = settings.jump_speed;
+    let Ok(tf) = transform.get_single() else {
+        return;
+    };
+
+    if is_ground_beneath(tf.translation, &world_state) {
+        vel.value.y = settings.jump_speed;
+    }
 }
 
 fn toggle_fly_mode(keyboard: Res<ButtonInput<KeyCode>>, mut settings: ResMut<PlayerSettings>) {
